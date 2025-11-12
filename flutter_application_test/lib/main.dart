@@ -12,19 +12,36 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
-      title: 'Flutter Application',
+    return MaterialApp(
+      title: 'Football Tickets',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
-        
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          hintStyle: TextStyle(color: Colors.grey[500]),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: Colors.deepOrange,
+            foregroundColor: Colors.white,
+          ),
+        ),
       ),
       initialRoute: '/login',
       routes: {
-        '/login': (context) =>  LoginPage(),
+        '/login': (context) => LoginPage(),
         '/home': (context) => const HomePage(),
-        '/register': (context) => const RegisterPage(),
+        '/register': (context) => RegisterPage(),
       },
     );
   }

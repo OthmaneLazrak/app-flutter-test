@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +22,6 @@ flutter:
   assets:
     - images/etudiant1.jpg
     - images/logo.jpg
+    - images/team.png
+    - images/wydad.svg
+    - images/maroclogo.png
