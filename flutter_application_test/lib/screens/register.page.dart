@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import '../services/profile_image_service.dart';
+
 
 class RegisterPage extends StatefulWidget {
   RegisterPage({super.key});
@@ -12,11 +18,15 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
+  
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final formkey = GlobalKey<FormState>();
 
   bool passwordVisible = false;
   bool confirmPasswordVisible = false;
+  Uint8List? _selectedImageBytes;
+  final ImagePicker _picker = ImagePicker();
 
   String? validateName(String? value) {
     if (value == null || value.isEmpty) {
@@ -57,6 +67,65 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _selectedImageBytes = bytes;
+        });
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Erreur lors de la sélection de l'image");
+    }
+  }
+
+  Future<void> SignUp() async {
+  try {
+    UserCredential userCredential =
+        await _auth.createUserWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    // 🔥 Mettre à jour le nom dans Firebase Auth
+    await userCredential.user!.updateDisplayName(nameController.text.trim());
+    await userCredential.user!.reload();
+
+    // 🔥 Sauvegarder la photo de profil si une a été sélectionnée
+    if (_selectedImageBytes != null) {
+      await ProfileImageService.saveProfileImageBytes(
+        _selectedImageBytes!,
+        userCredential.user!.uid,
+      );
+    }
+
+    // 🔥 Recharge l'utilisateur après mise à jour
+    FirebaseAuth.instance.currentUser;
+
+    Navigator.pushReplacementNamed(context, '/login');
+  } on FirebaseAuthException catch (e) {
+    if (e.code == "weak-password") {
+      Fluttertoast.showToast(msg: "The password provided is too weak.");
+    }
+    if (e.code == "invalid-email") {
+      Fluttertoast.showToast(msg: "The email address is not valid.");
+    }
+    if (e.code == "email-already-in-use") {
+      Fluttertoast.showToast(msg: "The account already exists for that email.");
+    }
+  }
+}
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,9 +136,9 @@ class _RegisterPageState extends State<RegisterPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFD32F2F),
-              Color(0xFFB71C1C),
-              Color(0xFF7B1D1D),
+              Color(0xFF4CAF50),
+              Color(0xFF8BC34A),
+              Color(0xFFFFC107),
             ],
           ),
         ),
@@ -180,7 +249,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           
                           // Title
                           Text(
-                            "Join Wydad !",
+                            "Rejoignez Fruit Predictor !",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white,
@@ -228,6 +297,66 @@ class _RegisterPageState extends State<RegisterPage> {
                             ],
                           ),
                           SizedBox(height: 35),
+
+                          // Photo de Profil
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              padding: EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.5),
+                                  width: 2,
+                                ),
+                                color: Colors.white.withOpacity(0.1),
+                              ),
+                                child: _selectedImageBytes == null
+                                  ? Column(
+                                      children: [
+                                        Icon(
+                                          Icons.camera_alt,
+                                          size: 50,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          "Ajouter une photo",
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.9),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Stack(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 50,
+                                          backgroundImage:
+                                              MemoryImage(_selectedImageBytes!),
+                                        ),
+                                        Positioned(
+                                          bottom: 0,
+                                          right: 0,
+                                          child: Container(
+                                            padding: EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.white,
+                                            ),
+                                            child: Icon(
+                                              Icons.edit,
+                                              size: 18,
+                                              color: Color(0xFF4CAF50),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                          SizedBox(height: 24),
 
                           // Name Field
                           TextFormField(
@@ -404,17 +533,14 @@ class _RegisterPageState extends State<RegisterPage> {
                               ],
                             ),
                             child: ElevatedButton(
-                              onPressed: () {
-                                if (formkey.currentState!.validate()) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Account created successfully!'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                  Navigator.pushNamed(context, '/home');
-                                }
-                              },
+                             
+                                  
+                              onPressed: () async {
+                                  if (formkey.currentState!.validate()) {
+                                    await SignUp();             // 👈 ENFIN ON APPELLE SIGNUP !
+                                  }
+                                },
+                                        
                               style: ElevatedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(vertical: 16.0),
                                 shape: RoundedRectangleBorder(
@@ -426,7 +552,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: Text(
                                 'Register',
                                 style: TextStyle(
-                                  color: Color(0xFFD32F2F),
+                                  color: Color(0xFF4CAF50),
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1,

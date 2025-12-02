@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
@@ -11,6 +12,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final formkey = GlobalKey<FormState>();
+
+
 
   bool passwordVisible = false;
 
@@ -35,6 +38,57 @@ class _LoginPageState extends State<LoginPage> {
     }
     return null;
   }
+  // ✅ La fonction Signin avec Firebase
+  Future<void> Signin() async {
+    if (!formkey.currentState!.validate()) return;
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+
+      if (userCredential.user != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Sign-in successful!")));
+
+        // Naviguer vers la page Home après connexion réussie
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = "No user found for that email.";
+          break;
+        case 'wrong-password':
+          message = "Wrong password provided.";
+          break;
+        case 'invalid-email':
+          message = "The email address is invalid.";
+          break;
+        case 'user-disabled':
+          message = "This user account has been disabled.";
+          break;
+        case 'too-many-requests':
+          message = "Too many attempts. Please try again later.";
+          break;
+        default:
+          message = "An error occurred. Try again.";
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      print("FirebaseAuthException: $message");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("An unexpected error occurred.")),
+      );
+      print("Unknown error: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +100,9 @@ class _LoginPageState extends State<LoginPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFD32F2F),
-              Color(0xFFB71C1C),
-              Color(0xFF7B1D1D),
+              Color(0xFF4CAF50), // green
+              Color(0xFF8BC34A), // light green
+              Color(0xFFFFC107), // amber
             ],
           ),
         ),
@@ -137,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                           
                           // Title
                           Text(
-                            "Dima Wydad !",
+                            "Fruit Predictor",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white,
@@ -173,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               SizedBox(height: 12),
                               Text(
-                                "Réservez vos billets facilement",
+                                "Identifiez vos fruits en un clic",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.9),
@@ -300,17 +354,11 @@ class _LoginPageState extends State<LoginPage> {
                               ],
                             ),
                             child: ElevatedButton(
-                              onPressed: () {
-                                if (formkey.currentState!.validate()) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Processing Data'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                  Navigator.pushNamed(context, '/home');
-                                }
-                              },
+                                onPressed: () async {
+                                  if (formkey.currentState!.validate()) {
+                                    await Signin();
+                                  }
+                                },
                               style: ElevatedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(vertical: 16.0),
                                 shape: RoundedRectangleBorder(
@@ -322,7 +370,7 @@ class _LoginPageState extends State<LoginPage> {
                               child: Text(
                                 'Login',
                                 style: TextStyle(
-                                  color: Color(0xFFD32F2F),
+                                  color: Color(0xFF4CAF50),
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1,

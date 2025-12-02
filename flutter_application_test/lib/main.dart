@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_test/screens/home.page.dart';
 import 'package:flutter_application_test/screens/login.page.dart';
 import 'package:flutter_application_test/screens/register.page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
-  runApp(MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Nécessaire pour await
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {
@@ -13,10 +17,10 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Football Tickets',
+      title: 'Fruit Predictor',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
@@ -32,7 +36,7 @@ class MainApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: Colors.deepOrange,
+            backgroundColor: Colors.green[700],
             foregroundColor: Colors.white,
           ),
         ),
@@ -41,7 +45,8 @@ class MainApp extends StatelessWidget {
       routes: {
         '/login': (context) => LoginPage(),
         '/home': (context) => const HomePage(),
-        '/register': (context) => RegisterPage(),
+        '/register': (context) => RegisterPage()
+
       },
     );
   }
